@@ -1,0 +1,153 @@
+﻿@model BozokBotWeb.Models.ChatViewModel
+@{
+    ViewData["Title"] = "BozokBot - Öğrenci Asistanı";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Header -->
+            <div class="text-center mb-5">
+                <h1 class="display-4">🎓 BozokBot</h1>
+                <p class="lead text-muted">Bozok Üniversitesi Öğrenci İşleri Asistanı</p>
+                <p class="text-muted small">
+                    Lisans yönergeleri, yaz okulu, tek ders sınavı ve daha fazlası hakkında sorularınızı sorabilirsiniz.
+                </p>
+            </div>
+
+            <!-- Chat Container -->
+            <div class="card shadow-lg">
+                <div class="card-body p-4">
+                    
+                    <!-- Hata Mesajı -->
+                    @if (Model.HasError)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <strong>Hata!</strong> @Model.ErrorMessage
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    <!-- Soru Formu -->
+                    <form asp-action="Ask" method="post" id="questionForm">
+                        <div class="mb-3">
+                            <label for="question" class="form-label fw-bold">Sorunuzu Yazın:</label>
+                            <textarea 
+                                class="form-control" 
+                                id="question" 
+                                name="question" 
+                                rows="3" 
+                                placeholder="Örn: Yaz okulunda en fazla kaç AKTS ders alabilirim?"
+                                required>@Model.Question</textarea>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+                                <span class="spinner-border spinner-border-sm d-none" id="spinner"></span>
+                                💬 Sor
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Cevap Bölümü -->
+                    @if (!string.IsNullOrEmpty(Model.Answer))
+                    {
+                        <hr class="my-4">
+                        
+                        <div class="answer-section">
+                            <h5 class="mb-3">📋 Yanıt:</h5>
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <div class="markdown-content">
+                                        @Html.Raw(Markdig.Markdown.ToHtml(Model.Answer))
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Kaynaklar -->
+                            @if (Model.Sources != null && Model.Sources.Any())
+                            {
+                                <div class="mt-4">
+                                    <h6>📚 Kaynaklar:</h6>
+                                    <ul class="list-group">
+                                        @foreach (var source in Model.Sources.Take(3))
+                                        {
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <strong>@source.Document</strong>
+                                                    <br>
+                                                    <small class="text-muted">@source.Category</small>
+                                                </div>
+                                                <span class="badge bg-secondary rounded-pill">
+                                                    @source.Distance.ToString("F2")
+                                                </span>
+                                            </li>
+                                        }
+                                    </ul>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Örnek Sorular -->
+            <div class="mt-4">
+                <p class="text-muted small text-center">💡 Örnek sorular:</p>
+                <div class="d-flex flex-wrap gap-2 justify-content-center">
+                    <button class="btn btn-sm btn-outline-secondary example-question">
+                        Tek ders sınavına kimler girebilir?
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary example-question">
+                        Yaz okulunda kaç AKTS alabilirim?
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary example-question">
+                        GANO'su 2.80 olan öğrenci üst yarıyıldan ders alabilir mi?
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Örnek soru tıklama
+        document.querySelectorAll('.example-question').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.getElementById('question').value = this.textContent.trim();
+            });
+        });
+
+        // Form submit - loading göster
+        document.getElementById('questionForm').addEventListener('submit', function() {
+            document.getElementById('spinner').classList.remove('d-none');
+            document.getElementById('submitBtn').disabled = true;
+        });
+    </script>
+}
+
+<style>
+    .markdown-content {
+        white-space: pre-wrap;
+        word-wrap: break-word;
+    }
+    
+    .markdown-content h1, .markdown-content h2, .markdown-content h3 {
+        margin-top: 1rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .markdown-content ul, .markdown-content ol {
+        margin-left: 1.5rem;
+    }
+    
+    .example-question {
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .example-question:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+</style>
